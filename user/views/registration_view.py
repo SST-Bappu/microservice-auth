@@ -3,7 +3,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-
+from rest_framework.exceptions import NotFound as UserNotFound
 from user.models import User
 from user.serializers.serializer import UserSerializer
 # from user.shared_tasks.registration_email import send_registration_email
@@ -17,7 +17,6 @@ class UserRegistrationView(APIView):
         if serializer.is_valid():
             user = serializer.save()
             refresh = RefreshToken.for_user(user)
-            # send_registration_email.delay('email',serializer.data)
             # publish user data to kafka topic
             kafka = KafkaProducer()
             kafka.publish_message('user-registration', serializer.data)
@@ -33,10 +32,14 @@ class UserRegistrationView(APIView):
     
     
     def get(self, request):
-        id = request.query_params.get('id')
-        user = User.objects.get(id=id)
-        serializer = self.serializer_class(user)
-        kafka = KafkaProducer()
-        kafka.publish_message('registration', serializer.data)
-        # send_registration_email.delay('email', {'data':serializer.data})
-        return Response(serializer.data)
+        try:
+            id = request.query_params.get('id')
+            user = User.objects.get(id=id)
+            serializer = self.serializer_class(user)
+            kafka = KafkaProducer()
+            kafka.publish_message('registration', serializer.data)
+            return Response(serializer.data)
+        except Exception as e:
+            raise UserNotFound('User not found: ' + str(e))
+
+
