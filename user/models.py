@@ -8,7 +8,7 @@ class User(AbstractUser):
     name = models.CharField(max_length=50, blank=True, null=True)
     email = models.EmailField(
         max_length=70, unique=True)
-    phone_number = PhoneNumberField(unique=True, blank=True)
+    phone_number = PhoneNumberField(blank=True)
     
     # Default fields
     is_active = models.BooleanField(default=False)
