@@ -1,13 +1,16 @@
 from rest_framework import status
+from rest_framework.exceptions import NotFound as UserNotFound
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.exceptions import NotFound as UserNotFound
+
 from user.models import User
 from user.serializers.serializer import UserSerializer
 # from user.shared_tasks.registration_email import send_registration_email
 from user.shared_tasks.kafka_producer import KafkaProducer
+
+
 class UserRegistrationView(APIView):
     permission_classes = (AllowAny,)
     serializer_class = UserSerializer
@@ -30,7 +33,6 @@ class UserRegistrationView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-    
     def get(self, request):
         try:
             id = request.query_params.get('id')
@@ -41,5 +43,3 @@ class UserRegistrationView(APIView):
             return Response(serializer.data)
         except Exception as e:
             raise UserNotFound('User not found: ' + str(e))
-
-
